@@ -3,11 +3,12 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 from .state import AgentState
-# Phase 4 Import Updates
+# Phase 7 Import Updates
 from .tools import (
     search_tool, pci_pii_sentry_scan, regulatory_gap_analyzer, 
     calculate_potential_fine, detect_velocity_anomaly, generate_risk_forecast,
-    analyze_dashboard_image, verify_regulatory_citation
+    analyze_dashboard_image, verify_regulatory_citation, perform_chain_of_verification,
+    simulate_adversarial_attack
 )
 
 load_dotenv()
@@ -22,10 +23,7 @@ class ScoutOutput(BaseModel):
     confidence: str
 
 def scout_agent(state: AgentState):
-    """
-    Task 1: Discovery with 'Reflection' & 'Self-Correction'.
-    PHASE 4 UPDATE: Adds Regulatory Guardrails.
-    """
+    """Task 1: Discovery with CoVe."""
     retries = state.get("scout_retries", 0)
     current_query = "PCI-DSS 4.0 requirements for storing credit card numbers in logs"
     
@@ -43,9 +41,10 @@ def scout_agent(state: AgentState):
         res = "PCI-DSS 4.0 requires primary account numbers to be unreadable anywhere they are stored."
         confidence = "High"
         
-    # --- PHASE 4: GUARDRAIL VERIFICATION ---
     validation = verify_regulatory_citation(res)
-    final_finding = f"Scout (Verified): {res[:200]}... [{validation}]"
+    cove_log = perform_chain_of_verification(res)
+    
+    final_finding = f"Scout (Verified): {res[:200]}... [{validation}]\n{cove_log}"
         
     return {
         "findings": [final_finding],
@@ -53,16 +52,29 @@ def scout_agent(state: AgentState):
         "scout_retries": retries + 1
     }
 
+def ghost_agent(state: AgentState):
+    """
+    Task 0: GHOST AGENT (Red Team).
+    Simulates adversarial attacks if enabled by the user.
+    """
+    if not state.get("red_team_mode"):
+        return {"findings": []}
+        
+    attack_log = simulate_adversarial_attack()
+    return {"findings": [attack_log]}
+
 def sentry_agent(state: AgentState):
     """
-    Task 3: Behavioral Anomalies + Static Pattern Matching.
-    PHASE 4 UPDATE: Multi-Modal Vision Sentry.
+    Task 3: Behavioral Anomalies + Vision.
+    UPDATED: Reacts dynamically to Red Team attacks.
     """
     mock_transaction = "Payment processed for user@email.com using card 4111-2222-3333-4444"
     static_risks = pci_pii_sentry_scan(mock_transaction)
     
-    # ML Check
-    is_anomaly = detect_velocity_anomaly(simulation_mode="ATTACK")
+    # --- PHASE 5: DYNAMIC ML CHECK ---
+    # If Red Team is active, we simulate an ATTACK pattern. Otherwise NORMAL.
+    sim_mode = "ATTACK" if state.get("red_team_mode") else "NORMAL"
+    is_anomaly = detect_velocity_anomaly(simulation_mode=sim_mode)
     
     findings = []
     status = "LOW"
@@ -75,13 +87,11 @@ def sentry_agent(state: AgentState):
         findings.append("⚡ BEHAVIORAL ALERT: Isolation Forest detected Anomaly (Velocity > 10tx/s).")
         if status != "CRITICAL": status = "HIGH"
 
-    # --- PHASE 4: VISUAL SENTRY CHECK ---
-    # If the user uploaded an image via Streamlit, analyze it here
+    # Vision Check
     image_data = state.get("uploaded_image_bytes")
     if image_data:
         vision_result = analyze_dashboard_image(image_data)
         findings.append(f"👁️ VISION SENTRY: {vision_result}")
-        # Vision findings typically indicate an active UI error/alert
         status = "CRITICAL"
 
     return {
@@ -91,8 +101,8 @@ def sentry_agent(state: AgentState):
 
 def architect_agent(state: AgentState):
     """Task 2 & 4: Strategy with Financial Impact Analysis."""
-    relevant_findings = [f for f in state['findings'] if "Verified" in f]
-    latest_reg = relevant_findings[0] if relevant_findings else state['findings'][-1]
+    findings = [f for f in state['findings'] if "Verified" in f]
+    latest_reg = findings[0] if findings else state['findings'][-1]
     
     gap_analysis = regulatory_gap_analyzer(latest_reg)
     

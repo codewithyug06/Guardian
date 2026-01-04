@@ -17,7 +17,14 @@ class AgentState(TypedDict):
     generated_code: str
     
     # Phase 3: Predictive ML
-    risk_forecast: List[int] # Stores the 30-day prediction array
+    risk_forecast: List[int] 
     
-    # --- PHASE 4: MULTI-MODAL (NEW) ---
-    uploaded_image_bytes: Any # Holds raw image data for Vision Sentry
+    # Phase 4: Multi-Modal
+    uploaded_image_bytes: Any
+    
+    # Phase 5: Adversarial
+    red_team_mode: bool
+    
+    # --- PHASE 8: FEDERATED LEARNING (NEW) ---
+    federated_mode: bool # True if connected to Privacy Net
+    federated_logs: Annotated[List[str], operator.add] # Shared Intel Logs

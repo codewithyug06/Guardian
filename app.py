@@ -61,25 +61,22 @@ with st.sidebar:
     if not api_key: st.markdown("<div style='color:#ffaa00; font-weight:bold; border:1px solid #ffaa00; padding:8px; border-radius:4px;'>⚠️ CIRCUIT BREAKER ACTIVE</div>", unsafe_allow_html=True)
     else: st.markdown("<div style='color:#00ff88; font-weight:bold; border:1px solid #00ff88; padding:8px; border-radius:4px;'>✅ CORE SYSTEMS ONLINE</div>", unsafe_allow_html=True)
 
-    # --- PHASE 4: VISUAL SENTRY UPLOADER ---
     st.markdown("<br>### 👁️ VISUAL SENTRY", unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Upload Dashboard Screenshot", type=["png", "jpg", "jpeg"])
 
+    st.markdown("<br>### ⚔️ ADVERSARIAL GOVERNANCE", unsafe_allow_html=True)
+    # NEW RED TEAM BUTTON
+    run_red_team = st.button("🔥 RUN RED TEAM STRESS TEST", type="secondary", use_container_width=True)
+
     st.markdown("<br>### 🤖 AGENT SWARM", unsafe_allow_html=True)
-    agents = [
-        ("Scout", "Discovery", "agent-active"), 
-        ("Sentry", "Behavioral", "agent-active"), 
-        ("Architect", "Financial", "agent-active"), 
-        ("Coder", "Self-Healing", "agent-active"),
-        ("Prophet", "Forecasting", "agent-active")
-    ]
-    for name, role, status_class in agents: st.markdown(f"<div style='margin-bottom:5px;'><span class='{status_class}'>●</span> <b>{name}</b> <span style='color:#666; font-size:0.8rem;'>// {role}</span></div>", unsafe_allow_html=True)
+    agents = ["Scout", "Ghost", "Sentry", "Architect", "Coder", "Prophet"]
+    for name in agents: st.markdown(f"<div><span class='agent-active'>●</span> <b>{name}</b></div>", unsafe_allow_html=True)
     
     st.markdown("<br>### 📟 LIVE AGENT LOGS", unsafe_allow_html=True)
     terminal_content = ""
     if "final_state" in st.session_state:
         findings = st.session_state.final_state.get('findings', [])
-        logs = [f"[{datetime.now().strftime('%H:%M:%S')}] SYS: {f}" for f in findings[-6:]] # Increased log limit
+        logs = [f"[{datetime.now().strftime('%H:%M:%S')}] SYS: {f}" for f in findings[-6:]]
         for log in logs: terminal_content += f"<div class='terminal-line'>{log}</div>"
     st.markdown(f"<div class='terminal-window'>{terminal_content}</div>", unsafe_allow_html=True)
 
@@ -120,28 +117,38 @@ with col_act1:
                     st.session_state.final_state = final_state
                     st.rerun()
     else:
-        if st.button("🚀 INITIALIZE STRATEGIC AUDIT", type="primary", use_container_width=True):
+        # Determine Trigger Source (Button or Default)
+        if run_red_team:
             st.session_state.remediation_status = "PENDING"
-            with st.spinner("🤖 Agents Orchestrating (Scout Loop & Sentry Scan)..."):
-                
-                # --- PHASE 4: PASS IMAGE TO AGENTS ---
+            with st.spinner("⚔️ RED TEAM ATTACK LAUNCHED..."):
                 inputs = {
-                    "findings": [], 
-                    "risk_level": "UNKNOWN", 
-                    "scout_retries": 0,
-                    # We pass the bytes if a file was uploaded
+                    "findings": [], "risk_level": "UNKNOWN", "scout_retries": 0,
+                    "red_team_mode": True, # ACTIVATE GHOST
+                    "uploaded_image_bytes": None
+                }
+                final = graph.invoke(inputs, config=config)
+                # Store and rerun to show results
+                snapshot = graph.get_state(config)
+                if snapshot.next: st.session_state.final_state = snapshot.values
+                else: st.session_state.final_state = final
+                st.rerun()
+
+        elif st.button("🚀 INITIALIZE STRATEGIC AUDIT", type="primary", use_container_width=True):
+            st.session_state.remediation_status = "PENDING"
+            with st.spinner("🤖 Agents Orchestrating..."):
+                inputs = {
+                    "findings": [], "risk_level": "UNKNOWN", "scout_retries": 0,
+                    "red_team_mode": False, # NORMAL MODE
                     "uploaded_image_bytes": uploaded_file.getvalue() if uploaded_file else None
                 }
-                
-                final_state = graph.invoke(inputs, config=config)
+                final = graph.invoke(inputs, config=config)
                 
                 snapshot = graph.get_state(config)
                 if snapshot.next:
-                    st.session_state.final_state = snapshot.values 
+                    st.session_state.final_state = snapshot.values
                     st.rerun()
                 else:
-                    st.session_state.final_state = final_state 
-                    st.toast("Analysis Complete", icon="🛡️")
+                    st.session_state.final_state = final
 
 # --- DASHBOARD LAYOUT ---
 if "final_state" in st.session_state:
@@ -199,8 +206,9 @@ if "final_state" in st.session_state:
         if remediated: st.success("Resolved: Policy updated.")
         else:
             for f in state.get('findings', []):
-                # Phase 4 Update: Highlighting Vision Alerts
-                if "VISION SENTRY" in f: st.error(f"**{f}**", icon="👁️")
+                # Phase 7 Update: Highlighting Ghost Attacks
+                if "GHOST" in f: st.error(f"**{f}**", icon="💀") # Ghost Alert
+                elif "VISION SENTRY" in f: st.error(f"**{f}**", icon="👁️")
                 elif "Retrying" in f: st.caption(f"🔄 {f}") 
                 elif "BEHAVIORAL" in f: st.warning(f"**{f}**", icon="⚡")
                 

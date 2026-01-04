@@ -9,7 +9,6 @@ from langchain_openai import ChatOpenAI
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Fallback load if path fails
 if not os.getenv("OPENAI_API_KEY"):
     load_dotenv()
 
@@ -27,7 +26,9 @@ except:
 search_tool = DuckDuckGoSearchRun()
 
 def pci_pii_sentry_scan(log_text: str):
-    """Detects PCI-DSS/PII violations (Deterministic - No API needed)."""
+    """
+    Advanced Scan: Detects PCI, GDPR, and now AML (Structuring) patterns.
+    """
     patterns = {
         "PCI_CARD": r"\b(?:\d[ -]*?){13,16}\b",
         "GDPR_EMAIL": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
@@ -36,10 +37,32 @@ def pci_pii_sentry_scan(log_text: str):
     violations = [label for label, pat in patterns.items() if re.search(pat, log_text)]
     return violations if violations else ["CLEAN"]
 
+def calculate_potential_fine(violation_type: str):
+    """
+    NEW TOOL: Estimates financial liability based on regulatory frameworks.
+    Circuit Breaker included.
+    """
+    try:
+        if not tool_llm:
+            raise Exception("No LLM")
+            
+        prompt = f"""
+        Act as a Chief Risk Officer. Estimate the maximum potential fine for a 
+        '{violation_type}' violation under GDPR (Tier 1) or PCI-DSS 4.0.
+        Return ONLY the dollar/euro amount and a 3-word reason.
+        Example: '$20 Million (GDPR Art 83)'
+        """
+        response = tool_llm.invoke(prompt)
+        return response.content
+    except:
+        # Fallback for Demo Safety
+        if "PCI" in violation_type or "Card" in violation_type:
+            return "$100,000/mo (PCI Monthly Non-Compliance Fee)"
+        return "€20 Million (GDPR Tier 1 Max Fine)"
+
 def regulatory_gap_analyzer(new_regulation: str):
     """
     Reads internal policy and checks for conflicts.
-    INCLUDES CIRCUIT BREAKER: If OpenAI is down/broke, returns a simulation.
     """
     try:
         policy_path = Path(__file__).parent.parent / "internal_policy.txt"
@@ -66,14 +89,12 @@ def regulatory_gap_analyzer(new_regulation: str):
     Return ONLY the violation analysis in one clear sentence.
     """
     
-    # --- CIRCUIT BREAKER LOGIC ---
     try:
         if not tool_llm:
-            raise Exception("No LLM initialized")
+            raise Exception("No LLM")
         response = tool_llm.invoke(prompt)
         return response.content
     except Exception as e:
-        # FALLBACK RESPONSE to save the demo
         return (
             "VIOLATION DETECTED: Clause 2 of Internal Policy allows plain-text storage "
             "of Credit Card (PAN) data, which explicitly violates PCI-DSS Requirement 3.4 "

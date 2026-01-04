@@ -1,7 +1,10 @@
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from .state import AgentState
-from .agents import scout_agent, sentry_agent, architect_agent, visa_enforcement_agent, coder_agent
+from .agents import (
+    scout_agent, sentry_agent, architect_agent, 
+    visa_enforcement_agent, coder_agent, prophet_agent
+)
 
 def should_scout_continue(state: AgentState):
     """
@@ -22,7 +25,8 @@ def build_compliance_graph():
     workflow.add_node("scout", scout_agent)
     workflow.add_node("sentry", sentry_agent)
     workflow.add_node("architect", architect_agent)
-    workflow.add_node("coder", coder_agent)  # Phase 2 Node
+    workflow.add_node("coder", coder_agent)
+    workflow.add_node("prophet", prophet_agent) # NEW NODE
     workflow.add_node("visa_guard", visa_enforcement_agent)
 
     # 3. Define Flow
@@ -38,8 +42,9 @@ def build_compliance_graph():
     )
     
     workflow.add_edge("sentry", "architect")
-    workflow.add_edge("architect", "coder") # Architect -> Coder
-    workflow.add_edge("coder", "visa_guard") # Coder -> Enforcement
+    workflow.add_edge("architect", "coder")
+    workflow.add_edge("coder", "prophet")      # Coder passes to Prophet
+    workflow.add_edge("prophet", "visa_guard") # Prophet passes to Enforcement
     workflow.add_edge("visa_guard", END)
 
     # 4. Compile with Interrupts & Memory

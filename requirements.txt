@@ -9,6 +9,5 @@ python-dotenv
 duckduckgo-search
 chromadb
 tiktoken
-langchain-text-splitters
 scikit-learn
 numpy

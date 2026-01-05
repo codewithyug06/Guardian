@@ -209,7 +209,7 @@ with c2:
             <div style='display: flex; gap: 15px; align-items: center; margin-top: 5px;'>
                 <span style='font-family: "JetBrains Mono"; font-size: 0.8rem; color: #64748b;'>AUTONOMOUS GOVERNANCE ECOSYSTEM</span>
                 <span class="badge badge-active">● SYSTEM ONLINE</span>
-                <span class="badge badge-active">V4.0.1 ELITE</span>
+                <span class="badge badge-active">V5.0 PROD (IIT-M EDITION)</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -255,8 +255,8 @@ with st.sidebar:
     agents_list = [
         ("Scout", "Discovery"), ("Ghost", "Red Team"), 
         ("Sentry", "Vision/ML"), ("Architect", "Strategy"), 
-        ("Coder", "Patching"), ("Consensus", "Audit"), 
-        ("Prophet", "Forecast")
+        ("Coder", "Patching"), ("Mirror", "Dig. Twin"),
+        ("Consensus", "Audit"), ("Prophet", "Forecast")
     ]
     
     html_agents = "<div style='display: grid; grid-template-columns: 1fr 1fr; gap: 8px;'>"
@@ -282,28 +282,44 @@ try:
     is_paused = bool(curr.next and "visa_guard" in curr.next)
 except: is_paused = False
 
-# --- DYNAMIC ACTION BANNER ---
+# --- DYNAMIC ACTION BANNER (CRITICAL STATE) ---
 if is_paused:
     snapshot = graph.get_state(config)
     gen_code = snapshot.values.get("generated_code")
+    twin_report = snapshot.values.get("digital_twin_metrics", "No Simulation Data")
+    policy_draft = snapshot.values.get("policy_update_proposal", "")
     
     st.markdown(f"""
     <div class="alert-box" style="border-left-color: #ff0055; background: rgba(255, 0, 85, 0.05);">
         <div style="font-size: 1.5rem;">⚠️</div>
         <div>
             <div class="alert-title">CRITICAL INTERVENTION REQUIRED</div>
-            <div class="alert-desc">The Architect Agent has generated a self-healing patch. Authorization required to deploy to production.</div>
+            <div class="alert-desc">The Architect Agent has generated a self-healing patch. Mirror Node simulation complete.</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     col_code, col_act = st.columns([1.5, 1])
     with col_code:
-        st.markdown("##### 🧬 GENERATED PATCH PREVIEW")
-        st.code(gen_code, language="python")
+        # TABS FOR CODE AND TWIN
+        t_patch, t_twin = st.tabs(["🧬 PATCH PREVIEW", "📊 DIGITAL TWIN SIMULATION"])
+        
+        with t_patch:
+            st.markdown("#### Generated Code (Python)")
+            st.code(gen_code, language="python")
+            
+        with t_twin:
+            st.markdown("#### Performance Impact Analysis")
+            st.code(twin_report, language="text")
+            
     with col_act:
         st.markdown("##### 🛡️ DECISION MATRIX")
         st.info(snapshot.values.get("remediation_plan", "No plan."))
+        
+        # Policy Evolution Display
+        if policy_draft:
+            with st.expander("⚖️ Policy Amendment Proposal"):
+                st.write(policy_draft)
         
         b1, b2 = st.columns(2)
         if b1.button("⚡ DEPLOY PATCH", type="primary", use_container_width=True):
@@ -316,7 +332,7 @@ if is_paused:
                 st.rerun()
 
 else:
-    # --- CONTROL BAR ---
+    # --- CONTROL BAR (NORMAL STATE) ---
     c_btn, c_stat = st.columns([1, 4])
     with c_btn:
         label = "🔥 LAUNCH ATTACK" if run_red_team else "🚀 START AUDIT"
@@ -338,11 +354,42 @@ else:
                 }
                 final = graph.invoke(inputs, config=config)
                 snapshot = graph.get_state(config)
+                
                 if snapshot.next:
                     st.session_state.final_state = snapshot.values 
                     st.rerun()
                 else:
                     st.session_state.final_state = final
+
+# --- HELPER FUNCTIONS FOR CACHED VISUALIZATIONS ---
+@st.cache_data
+def render_risk_chart(forecast, remediated):
+    if not forecast or remediated:
+        forecast = [random.randint(0, 5) for _ in range(30)]
+    
+    dates = [datetime.now() + timedelta(days=x) for x in range(30)]
+    fig = go.Figure(go.Scatter(x=dates, y=forecast, fill='tozeroy', line=dict(color='#00ff88' if remediated else '#ff0055', width=3)))
+    fig.update_layout(
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+        height=300, margin=dict(l=0,r=0,t=20,b=20),
+        xaxis=dict(showgrid=False, color='#444'), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color='#444')
+    )
+    return fig
+
+@st.cache_data
+def render_knowledge_graph():
+    try:
+        graph = graphviz.Digraph()
+        graph.attr(bgcolor='transparent')
+        G = _init_regulatory_graph()
+        for n in G.nodes:
+            c = "#ff0055" if G.nodes[n].get('type') == "Regulation" else "#00f2ff"
+            graph.node(str(n), style="filled", fillcolor="#0d1117", fontcolor="white", color=c, penwidth="2")
+        for e in G.edges:
+            graph.edge(str(e[0]), str(e[1]), color="#333", penwidth="1")
+        return graph
+    except:
+        return None
 
 # --- METRICS HUD ---
 if "final_state" in st.session_state:
@@ -382,25 +429,24 @@ if "final_state" in st.session_state:
 
     # --- MAIN CONTENT TABS ---
     st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
-    t1, t2, t3 = st.tabs(["📈 LIVE INTEL", "🕸️ NEURAL MESH", "🔒 AUDIT VAULT"])
+    
+    t1, t2, t3, t4 = st.tabs(["📈 LIVE INTEL", "🕸️ NEURAL MESH", "🔒 AUDIT VAULT", "🚚 SUPPLY CHAIN"])
 
     with t1:
         c1, c2 = st.columns([2, 1])
         with c1:
-            dates = [datetime.now() + timedelta(days=x) for x in range(30)]
-            forecast = state.get("risk_forecast", [])
-            if not forecast or remediated: forecast = [random.randint(0, 5) for _ in range(30)]
-            
-            fig = go.Figure(go.Scatter(x=dates, y=forecast, fill='tozeroy', line=dict(color='#00ff88' if remediated else '#ff0055', width=3)))
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-                height=300, margin=dict(l=0,r=0,t=20,b=20),
-                xaxis=dict(showgrid=False, color='#444'), yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color='#444')
-            )
+            forecast_data = state.get("risk_forecast", [])
+            fig = render_risk_chart(forecast_data, remediated)
             st.plotly_chart(fig, use_container_width=True)
         
         with c2:
             st.markdown("##### ⚡ ACTIVE THREAT STREAM")
+            
+            # Show Adaptive Sensitivity if active
+            sensitivity = state.get("adaptive_sensitivity", 0.0)
+            if sensitivity > 0:
+                st.info(f"🦎 ADAPTIVE DEFENSE: Sensitivity increased by +{sensitivity} based on forecast.")
+
             if remediated:
                 st.success("✔ System Secured. No active threats.")
             else:
@@ -416,17 +462,12 @@ if "final_state" in st.session_state:
     with t2:
         st.markdown("##### 🔗 KNOWLEDGE GRAPH TOPOLOGY")
         st.info("ℹ️ Mesh RAG Visualization: This graph demonstrates how a failure in PCI-DSS Requirement 3.4 semantically triggers a GDPR Article 32 risk because they share the 'Encryption' concept node.")
-        try:
-            graph = graphviz.Digraph()
-            graph.attr(bgcolor='transparent')
-            G = _init_regulatory_graph()
-            for n in G.nodes:
-                c = "#ff0055" if G.nodes[n].get('type') == "Regulation" else "#00f2ff"
-                graph.node(str(n), style="filled", fillcolor="#0d1117", fontcolor="white", color=c, penwidth="2")
-            for e in G.edges:
-                graph.edge(str(e[0]), str(e[1]), color="#333", penwidth="1")
-            st.graphviz_chart(graph)
-        except: st.caption("Visual Engine Loading...")
+        
+        graph_obj = render_knowledge_graph()
+        if graph_obj:
+            st.graphviz_chart(graph_obj)
+        else:
+            st.caption("Visual Engine Loading...")
 
     with t3:
         c_a, c_b = st.columns(2)
@@ -439,11 +480,32 @@ if "final_state" in st.session_state:
                     elif "❌" in l: st.error(l)
                     else: st.info(l)
             else: st.caption("No active consensus protocols.")
+            
+            # DECISION HASH DISPLAY
+            d_hash = state.get("decision_hash", "PENDING_COMPUTATION")
+            st.markdown(f"""
+            <div style='margin-top:10px; font-family:"JetBrains Mono"; font-size:0.7rem; color:#666;'>
+                <strong>🔐 IMMUTABLE DECISION ANCHOR (MERKLE ROOT):</strong><br>
+                {d_hash}
+            </div>
+            """, unsafe_allow_html=True)
         
         with c_b:
             st.markdown("##### 📄 GENERATE REPORT")
             rpt = generate_audit_report_text(state)
             st.download_button("DOWNLOAD ENCRYPTED REPORT", rpt, "audit.txt", "text/plain", type="primary", use_container_width=True)
+
+    with t4:
+        # SUPPLY CHAIN VISUALIZATION
+        st.markdown("##### 🚚 VENDOR RISK MONITOR")
+        vendor_logs = state.get("vendor_risks", [])
+        if vendor_logs:
+            for v in vendor_logs:
+                if "ALERT" in v: st.warning(v, icon="⚠️")
+                elif "CRITICAL" in v: st.error(v, icon="🚨")
+                else: st.success(v, icon="✅")
+        else:
+            st.info("Supply Chain Scanning Inactive.")
 
     # --- FOOTER: TERMINAL & CHAT ---
     st.markdown("---")

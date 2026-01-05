@@ -29,8 +29,15 @@ class AgentState(TypedDict):
     federated_mode: bool 
     federated_logs: Annotated[List[str], operator.add] 
     
-    # --- FINAL WINNING ADVANCEMENTS (NEW) ---
-    consensus_audit: Annotated[List[str], operator.add] # Stores cross-agent validation logs
-    compliance_drift: float # 0-100% Score for CFO Dashboard
-    audio_bytes: Any # For Audio Sentry
-    jurisdiction: str # EU/US/APAC mode
+    # --- PHASE 9: TRUST & ROBUSTNESS (Previous Update) ---
+    consensus_audit: Annotated[List[str], operator.add] 
+    compliance_drift: float 
+    audio_bytes: Any 
+    jurisdiction: str 
+    
+    # --- PHASE 10: EXTRAORDINARY FEATURES (NEW) ---
+    digital_twin_metrics: str                  # 1. Mirror Node Results
+    vendor_risks: Annotated[List[str], operator.add] # 2. Supply Chain Intel
+    decision_hash: str                         # 3. Immutable Merkle Root
+    policy_update_proposal: str                # 4. Auto-Legislator Draft
+    adaptive_sensitivity: float                # 5. The Chameleon Metric

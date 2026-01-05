@@ -4,7 +4,7 @@ from .state import AgentState
 from .agents import (
     scout_agent, sentry_agent, architect_agent, 
     visa_enforcement_agent, coder_agent, prophet_agent, 
-    ghost_agent, federated_agent, consensus_agent
+    ghost_agent, federated_agent, consensus_agent, mirror_agent
 )
 
 def should_scout_continue(state: AgentState):
@@ -23,7 +23,8 @@ def build_compliance_graph():
     workflow.add_node("sentry", sentry_agent)
     workflow.add_node("architect", architect_agent)
     workflow.add_node("coder", coder_agent)
-    workflow.add_node("consensus", consensus_agent) # NEW TRUST NODE
+    workflow.add_node("mirror", mirror_agent) # NEW NODE
+    workflow.add_node("consensus", consensus_agent)
     workflow.add_node("prophet", prophet_agent)
     workflow.add_node("visa_guard", visa_enforcement_agent)
 
@@ -43,8 +44,9 @@ def build_compliance_graph():
     workflow.add_edge("federated", "sentry") 
     workflow.add_edge("sentry", "architect")
     workflow.add_edge("architect", "coder")
-    workflow.add_edge("coder", "consensus") # Coder -> Consensus Review
-    workflow.add_edge("consensus", "prophet") # Consensus -> Prophet
+    workflow.add_edge("coder", "mirror") # Coder -> Mirror
+    workflow.add_edge("mirror", "consensus") # Mirror -> Consensus
+    workflow.add_edge("consensus", "prophet") 
     workflow.add_edge("prophet", "visa_guard")
     workflow.add_edge("visa_guard", END)
 

@@ -8,7 +8,8 @@ from .tools import (
     calculate_potential_fine, detect_velocity_anomaly, generate_risk_forecast,
     analyze_dashboard_image, verify_regulatory_citation, perform_chain_of_verification,
     simulate_adversarial_attack, fetch_federated_insights, calculate_compliance_drift,
-    transcribe_audio_simulation
+    transcribe_audio_simulation, scan_vendor_security, draft_policy_update,
+    simulate_digital_twin, generate_decision_hash
 )
 
 load_dotenv()
@@ -23,7 +24,7 @@ class ScoutOutput(BaseModel):
     confidence: str
 
 def scout_agent(state: AgentState):
-    """Task 1: Discovery with CoVe."""
+    """Task 1: Discovery with CoVe & Supply Chain Monitoring."""
     retries = state.get("scout_retries", 0)
     current_query = "PCI-DSS 4.0 requirements for storing credit card numbers in logs"
     
@@ -41,11 +42,18 @@ def scout_agent(state: AgentState):
         confidence = "High"
         
     validation = verify_regulatory_citation(res)
-    # CALLING THE NEW DEEP PROOF FUNCTION
     cove_log = perform_chain_of_verification(res)
     
+    # NEW: SUPPLY CHAIN OUTBOUND CHECK
+    vendor_scan = scan_vendor_security()
+    
     final_finding = f"Scout (Verified): {res[:200]}... [{validation}]\n{cove_log}"
-    return {"findings": [final_finding], "scout_confidence": confidence, "scout_retries": retries + 1}
+    return {
+        "findings": [final_finding],
+        "vendor_risks": vendor_scan,
+        "scout_confidence": confidence, 
+        "scout_retries": retries + 1
+    }
 
 def ghost_agent(state: AgentState):
     """Task 0: GHOST AGENT (Red Team Attack Simulation)."""
@@ -60,13 +68,26 @@ def federated_agent(state: AgentState):
     return {"federated_logs": [insight], "findings": [insight]}
 
 def sentry_agent(state: AgentState):
-    """Task 3: Behavioral ML + Vision + Audio Sentry."""
+    """Task 3: Behavioral ML (Context-Aware) + Vision + Audio Sentry."""
     mock_transaction = "Payment processed for user@email.com using card 4111-2222-3333-4444"
     static_risks = pci_pii_sentry_scan(mock_transaction)
     
     sim_mode = "ATTACK" if state.get("red_team_mode") else "NORMAL"
     fed_mode = state.get("federated_mode", False)
-    is_anomaly = detect_velocity_anomaly(simulation_mode=sim_mode, federated_active=fed_mode)
+    
+    # NEW: ADAPTIVE DEFENSE (The Chameleon)
+    # Check if forecast indicates rising risk, if so, tighten sensitivity
+    # (Forecast list might be empty on first run, default to 0.0 impact)
+    forecast = state.get("risk_forecast", [])
+    sensitivity_boost = 0.0
+    if forecast and max(forecast) > 50:
+        sensitivity_boost = 0.15 # Tighten thresholds if future looks risky
+    
+    is_anomaly = detect_velocity_anomaly(
+        simulation_mode=sim_mode, 
+        federated_active=fed_mode,
+        sensitivity_override=sensitivity_boost
+    )
     
     findings = []
     status = "LOW"
@@ -77,7 +98,7 @@ def sentry_agent(state: AgentState):
     
     if is_anomaly:
         alert_type = "FEDERATED" if fed_mode else "LOCAL"
-        findings.append(f"⚡ BEHAVIORAL ALERT ({alert_type} INTELLIGENCE): Isolation Forest detected Anomaly.")
+        findings.append(f"⚡ BEHAVIORAL ALERT ({alert_type} INTELLIGENCE): Anomaly Detected (Sensitivity +{sensitivity_boost}).")
         if status != "CRITICAL": status = "HIGH"
 
     image_data = state.get("uploaded_image_bytes")
@@ -92,12 +113,13 @@ def sentry_agent(state: AgentState):
         findings.append(f"🔊 AUDIO SENTRY: {audio_result}")
         status = "HIGH"
 
-    return {"risk_level": status, "findings": findings}
+    return {"risk_level": status, "findings": findings, "adaptive_sensitivity": sensitivity_boost}
 
 def architect_agent(state: AgentState):
-    """Task 2: Strategy + Compliance Drift Calculation."""
+    """Task 2: Strategy + Policy Evolution."""
     findings = [f for f in state['findings'] if "Verified" in f]
     latest_reg = findings[0] if findings else state['findings'][-1]
+    
     gap_analysis = regulatory_gap_analyzer(latest_reg)
     risk = state.get("risk_level", "LOW")
     
@@ -109,13 +131,20 @@ def architect_agent(state: AgentState):
         impact = "Financial Exposure: Minimal"
         plan = "System Policy aligned."
     
+    # NEW: AUTONOMOUS POLICY EVOLUTION
+    # Draft an amendment if a gap is found
+    policy_draft = ""
+    if "VIOLATION" in gap_analysis:
+        policy_draft = draft_policy_update("Current Policy v2.1...", gap_analysis)
+    
     drift = calculate_compliance_drift(risk, state.get("policy_gaps", []), state.get("findings", []))
     
     return {
         "remediation_plan": plan, 
         "evidence_package": f"{gap_analysis} | {impact}", 
         "policy_gaps": [gap_analysis, impact],
-        "compliance_drift": drift
+        "compliance_drift": drift,
+        "policy_update_proposal": policy_draft
     }
 
 def coder_agent(state: AgentState):
@@ -136,19 +165,40 @@ def tokenize(data):
 """
     return {"generated_code": code.strip()}
 
+def mirror_agent(state: AgentState):
+    """
+    Task 4.2: DIGITAL TWIN (MIRROR NODE).
+    Simulates the code before it goes to Consensus.
+    """
+    code = state.get("generated_code", "")
+    if "# System Nominal" in code:
+        return {"digital_twin_metrics": "System Nominal - No Simulation Needed."}
+    
+    # Run the simulation tool
+    simulation_report = simulate_digital_twin(code)
+    return {"digital_twin_metrics": simulation_report}
+
 def consensus_agent(state: AgentState):
-    """Task 4.5: SWARM CONSENSUS PROTOCOL."""
+    """Task 4.5: SWARM CONSENSUS & DECISION HASHING."""
     proposed_code = state.get("generated_code", "")
+    sim_report = state.get("digital_twin_metrics", "")
     audit_logs = []
     
     if proposed_code and "# System Nominal" not in proposed_code:
         audit_logs.append("🔍 GUARDIAN CONSENSUS: Scanning patch for 'Backdoor' vulnerabilities...")
-        if "eval(" in proposed_code or "exec(" in proposed_code:
+        
+        # Check Simulation Results
+        if "FAIL" in sim_report:
+             audit_logs.append("❌ MIRROR NODE REJECT: Patch failed performance simulation.")
+        elif "eval(" in proposed_code or "exec(" in proposed_code:
             audit_logs.append("❌ CONSENSUS VETO: Patch contains unsafe execution patterns (CVE-Risk)!")
         else:
             audit_logs.append("✅ CONSENSUS VERDICT: Patch logic verified safe and PEP8 compliant.")
             
-    return {"consensus_audit": audit_logs}
+    # NEW: GENERATE DECISION HASH (Trust Anchor)
+    decision_hash = generate_decision_hash(state)
+            
+    return {"consensus_audit": audit_logs, "decision_hash": decision_hash}
 
 def prophet_agent(state: AgentState):
     """Task 5: Predictive."""

@@ -268,7 +268,13 @@ with st.sidebar:
     st.markdown(html_agents, unsafe_allow_html=True)
 
 # --- MAIN LOGIC ---
-graph = build_compliance_graph()
+
+# CACHED GRAPH INITIALIZATION
+@st.cache_resource
+def get_graph():
+    return build_compliance_graph()
+
+graph = get_graph()
 config = {"configurable": {"thread_id": st.session_state.thread_id}}
 
 try:
@@ -404,10 +410,12 @@ if "final_state" in st.session_state:
                     if "FED-NET" in f: st.markdown(f"<div style='color:#00ff88; font-size:0.85rem; margin-bottom:8px;'>🌐 {f}</div>", unsafe_allow_html=True)
                     elif "GHOST" in f: st.markdown(f"<div style='color:#ff0055; font-size:0.85rem; margin-bottom:8px;'>💀 {f}</div>", unsafe_allow_html=True)
                     elif "VISION" in f: st.markdown(f"<div style='color:#ffaa00; font-size:0.85rem; margin-bottom:8px;'>👁️ {f}</div>", unsafe_allow_html=True)
+                    elif "SAFE MODE" in f: st.markdown(f"<div style='color:#ff0055; font-weight:bold; font-size:0.85rem; margin-bottom:8px;'>⛔ {f}</div>", unsafe_allow_html=True)
                     else: st.markdown(f"<div style='color:#ccc; font-size:0.85rem; margin-bottom:8px;'>• {f}</div>", unsafe_allow_html=True)
 
     with t2:
         st.markdown("##### 🔗 KNOWLEDGE GRAPH TOPOLOGY")
+        st.info("ℹ️ Mesh RAG Visualization: This graph demonstrates how a failure in PCI-DSS Requirement 3.4 semantically triggers a GDPR Article 32 risk because they share the 'Encryption' concept node.")
         try:
             graph = graphviz.Digraph()
             graph.attr(bgcolor='transparent')

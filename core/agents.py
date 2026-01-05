@@ -41,7 +41,9 @@ def scout_agent(state: AgentState):
         confidence = "High"
         
     validation = verify_regulatory_citation(res)
+    # CALLING THE NEW DEEP PROOF FUNCTION
     cove_log = perform_chain_of_verification(res)
+    
     final_finding = f"Scout (Verified): {res[:200]}... [{validation}]\n{cove_log}"
     return {"findings": [final_finding], "scout_confidence": confidence, "scout_retries": retries + 1}
 
@@ -58,9 +60,7 @@ def federated_agent(state: AgentState):
     return {"federated_logs": [insight], "findings": [insight]}
 
 def sentry_agent(state: AgentState):
-    """
-    Task 3: Behavioral ML + Vision + Audio Sentry.
-    """
+    """Task 3: Behavioral ML + Vision + Audio Sentry."""
     mock_transaction = "Payment processed for user@email.com using card 4111-2222-3333-4444"
     static_risks = pci_pii_sentry_scan(mock_transaction)
     
@@ -80,14 +80,12 @@ def sentry_agent(state: AgentState):
         findings.append(f"⚡ BEHAVIORAL ALERT ({alert_type} INTELLIGENCE): Isolation Forest detected Anomaly.")
         if status != "CRITICAL": status = "HIGH"
 
-    # Multi-Modal: Vision
     image_data = state.get("uploaded_image_bytes")
     if image_data:
         vision_result = analyze_dashboard_image(image_data)
         findings.append(f"👁️ VISION SENTRY: {vision_result}")
         status = "CRITICAL"
         
-    # Multi-Modal: Audio
     audio_data = state.get("audio_bytes")
     if audio_data:
         audio_result = transcribe_audio_simulation(audio_data)
@@ -111,7 +109,6 @@ def architect_agent(state: AgentState):
         impact = "Financial Exposure: Minimal"
         plan = "System Policy aligned."
     
-    # Calculate CFO Metric
     drift = calculate_compliance_drift(risk, state.get("policy_gaps", []), state.get("findings", []))
     
     return {
@@ -140,16 +137,12 @@ def tokenize(data):
     return {"generated_code": code.strip()}
 
 def consensus_agent(state: AgentState):
-    """
-    Task 4.5: SWARM CONSENSUS PROTOCOL (The 'Trust' Layer).
-    The Ghost Agent (Red Team) audits the Coder Agent's output for safety.
-    """
+    """Task 4.5: SWARM CONSENSUS PROTOCOL."""
     proposed_code = state.get("generated_code", "")
     audit_logs = []
     
     if proposed_code and "# System Nominal" not in proposed_code:
         audit_logs.append("🔍 GUARDIAN CONSENSUS: Scanning patch for 'Backdoor' vulnerabilities...")
-        # Simulated Adversarial check
         if "eval(" in proposed_code or "exec(" in proposed_code:
             audit_logs.append("❌ CONSENSUS VETO: Patch contains unsafe execution patterns (CVE-Risk)!")
         else:
@@ -164,7 +157,24 @@ def prophet_agent(state: AgentState):
     return {"risk_forecast": forecast_data, "findings": [f"🔮 PROPHET: Projected 30-day Risk Trend calculated."]}
 
 def visa_enforcement_agent(state: AgentState):
-    """Task 4: Enforcement."""
+    """
+    Task 4: Visa Guard (Executes after Human Approval).
+    UPDATED: Implements Enterprise 'Safe Mode' Kill-Switch.
+    """
     risk = state.get("risk_level", "LOW")
-    action = "⛔ VISA GATEWAY: BLOCKED." if risk in ["HIGH", "CRITICAL"] else "✅ VISA GATEWAY: AUTHORIZED."
-    return {"findings": [action]}
+    findings = state.get("findings", [])
+    
+    # Check for Red Team or Critical indicators
+    is_under_attack = any("GHOST" in f for f in findings) or risk == "CRITICAL"
+    
+    if is_under_attack:
+        action = "⛔ VISA GATEWAY: SAFE MODE ACTIVATED (KILL-SWITCH)"
+        details = "CRITICAL THREAT DETECTED. Automatic Kill-Switch triggered. All transactions blocked pending Architect review."
+    elif risk == "HIGH":
+        action = "⚠️ VISA GATEWAY: CONDITIONAL BLOCK"
+        details = "High risk detected. Transactions queued for manual review."
+    else:
+        action = "✅ VISA GATEWAY: AUTHORIZED"
+        details = "Compliance checks passed. Traffic flowing normally."
+
+    return {"findings": [f"{action} | {details}"]}

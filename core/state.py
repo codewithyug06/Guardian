@@ -2,29 +2,35 @@ from typing import TypedDict, List, Annotated, Any
 import operator
 
 class AgentState(TypedDict):
-    # Base Fields
+    # --- BASE FIELDS (Existing) ---
     findings: Annotated[List[str], operator.add] 
     risk_level: str
     remediation_plan: str
     evidence_package: str
     policy_gaps: Annotated[List[str], operator.add]
     
-    # Phase 1: Reflection
+    # --- PHASE 1: REFLECTION ---
     scout_retries: int
     scout_confidence: str
     
-    # Phase 2: GenAI Patching
+    # --- PHASE 2: GEN AI ---
     generated_code: str
     
-    # Phase 3: Predictive ML
+    # --- PHASE 3: PREDICTIVE ML ---
     risk_forecast: List[int] 
     
-    # Phase 4: Multi-Modal
+    # --- PHASE 4: MULTI-MODAL (VISION) ---
     uploaded_image_bytes: Any
     
-    # Phase 5: Adversarial
+    # --- PHASE 5: ADVERSARIAL ---
     red_team_mode: bool
     
-    # --- PHASE 8: FEDERATED LEARNING (NEW) ---
-    federated_mode: bool # True if connected to Privacy Net
-    federated_logs: Annotated[List[str], operator.add] # Shared Intel Logs
+    # --- PHASE 8: FEDERATED LEARNING ---
+    federated_mode: bool 
+    federated_logs: Annotated[List[str], operator.add] 
+    
+    # --- FINAL WINNING ADVANCEMENTS (NEW) ---
+    consensus_audit: Annotated[List[str], operator.add] # Stores cross-agent validation logs
+    compliance_drift: float # 0-100% Score for CFO Dashboard
+    audio_bytes: Any # For Audio Sentry
+    jurisdiction: str # EU/US/APAC mode

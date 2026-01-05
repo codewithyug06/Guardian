@@ -32,23 +32,16 @@ except:
 
 search_tool = DuckDuckGoSearchRun()
 
-# --- PHASE 8: FEDERATED RISK TOOLS (NEW) ---
+# --- EXISTING TOOLS (Preserved) ---
 
 def fetch_federated_insights():
-    """
-    Simulates connecting to a Privacy-Preserving Federated Network.
-    Retrieves 'Model Gradients' or 'Threat Signatures' from peer banks 
-    without sharing any customer data.
-    """
-    # Simulated "Encrypted" Insights from the Network
+    """Simulates connecting to a Privacy-Preserving Federated Network."""
     global_threats = [
         "🌐 FED-NET: Peer Bank A detected 'Micro-Structuring' (<$100) at 50ms intervals.",
         "🌐 FED-NET: Peer Bank B updated weights for 'Obfuscated SQL' patterns.",
         "🌐 FED-NET: Global Consensus: Adjusting Isolation Forest contamination to 0.15."
     ]
     return random.choice(global_threats)
-
-# --- PHASE 7: ADVERSARIAL TOOLS ---
 
 def simulate_adversarial_attack():
     """Generates Red Team attack patterns."""
@@ -59,11 +52,10 @@ def simulate_adversarial_attack():
     ]
     return random.choice(attacks)
 
-# --- PHASE 6: KNOWLEDGE GRAPH ---
-
 REGULATORY_GRAPH = None
 
 def _init_regulatory_graph():
+    """Builds the Neural Mesh for Mesh RAG."""
     G = nx.DiGraph()
     G.add_node("Concept: Encryption", type="Topic")
     G.add_node("Concept: Data Retention", type="Topic")
@@ -105,8 +97,6 @@ def query_regulatory_mesh(topic_keyword):
     except Exception as e: return f"Graph Error: {str(e)}"
     return "\n".join(mesh_insights)
 
-# --- PHASE 5: VERIFICATION TOOLS ---
-
 def perform_chain_of_verification(regulatory_claim):
     verification_steps = []
     if "PCI" in regulatory_claim or "Card" in regulatory_claim:
@@ -120,8 +110,6 @@ def perform_chain_of_verification(regulatory_claim):
     log = "\n".join(verification_steps)
     return f"\n[⛓️ CHAIN-OF-VERIFICATION LOG]\n{log}\n[VERDICT]: VERIFIED (3/3 Sources)"
 
-# --- PHASE 4: VISION TOOLS ---
-
 def analyze_dashboard_image(image_bytes):
     try:
         if not tool_llm: raise Exception("No API Access")
@@ -134,37 +122,16 @@ def verify_regulatory_citation(finding):
     if any(reg in finding for reg in known_regs): return "✅ VERIFIED: Citation matches known frameworks."
     return "⚠️ CAUTION: Citation could not be cross-referenced."
 
-# --- PHASE 3: ML TOOLS (UPDATED) ---
-
 def detect_velocity_anomaly(simulation_mode="ATTACK", federated_active=False):
-    """
-    Real ML: Uses Isolation Forest.
-    UPDATED: If 'federated_active' is True, the model adapts to global intelligence
-    (simulated by training on a broader 'Normal' dataset representing peer banks).
-    """
     try:
         rng = np.random.RandomState(42)
-        
-        # Base Normal Behavior (Local Data)
         X_train = rng.normal(loc=60, scale=10, size=100).reshape(-1, 1)
-        
-        # Federated Learning Adjustment:
-        # If enabled, we "learn" from peer banks that tighter intervals are also normal in some contexts,
-        # OR that specific bursts are definitely attacks.
-        # For this demo, we increase sensitivity (contamination) based on 'Global Alerts'.
         contamination_level = 0.1
-        if federated_active:
-            # Simulate receiving a model update that creates a stricter boundary
-            contamination_level = 0.2 
-            
+        if federated_active: contamination_level = 0.2 
         clf = IsolationForest(random_state=42, contamination=contamination_level)
         clf.fit(X_train)
-        
-        if simulation_mode == "ATTACK":
-            current_data = np.array([[0.1]]) 
-        else:
-            current_data = np.array([[55.0]])
-            
+        if simulation_mode == "ATTACK": current_data = np.array([[0.1]]) 
+        else: current_data = np.array([[55.0]])
         prediction = clf.predict(current_data)
         return prediction[0] == -1
     except Exception as e:
@@ -174,17 +141,13 @@ def detect_velocity_anomaly(simulation_mode="ATTACK", federated_active=False):
 def generate_risk_forecast(current_risk_level):
     days = 30
     forecast = []
-    if current_risk_level in ["HIGH", "CRITICAL"]:
-        base = 80; trend = 0.5
-    else:
-        base = 20; trend = -0.2
+    if current_risk_level in ["HIGH", "CRITICAL"]: base = 80; trend = 0.5
+    else: base = 20; trend = -0.2
     for i in range(days):
         noise = random.randint(-5, 5)
         val = base + (trend * i) + noise
         forecast.append(max(0, min(100, int(val))))
     return forecast
-
-# --- PHASE 2: RAG TOOLS ---
 
 RAG_RETRIEVER = None
 
@@ -230,14 +193,12 @@ def regulatory_gap_analyzer(new_regulation: str):
     policy_context = _get_rag_context(new_regulation)
     method_used = "Hybrid: Vector Search + Knowledge Graph"
     graph_context = query_regulatory_mesh(new_regulation)
-    
     if not policy_context:
         try:
             with open(Path(__file__).parent.parent / "internal_policy.txt", "r") as f:
                 policy_context = f.read()
             method_used = "Full-Document Scan (Fallback)"
         except: return "Error reading policy."
-
     prompt = f"""
     You are a Senior Compliance Auditor. 
     Compare Reg: '{new_regulation}' vs Policy: '{policy_context}'.
@@ -249,3 +210,64 @@ def regulatory_gap_analyzer(new_regulation: str):
         return tool_llm.invoke(prompt).content
     except:
         return "VIOLATION DETECTED: Clause 2 (Plain-text PAN) violates PCI-DSS 3.4."
+
+# --- FINAL WINNING TOOLS (NEW) ---
+
+def calculate_compliance_drift(risk_level, policy_gaps, findings):
+    """
+    Calculates a 'Compliance Drift' score (0-100%) for the CFO Dashboard.
+    0% = Perfect Alignment. 100% = Total System Failure.
+    """
+    base_score = 0
+    if risk_level == "CRITICAL": base_score = 65
+    elif risk_level == "HIGH": base_score = 40
+    elif risk_level == "LOW": base_score = 5
+    
+    # Penalize for unique gaps and active attacks
+    gap_penalty = len(policy_gaps) * 12
+    adversarial_penalty = 25 if any("GHOST" in f for f in findings) else 0
+    
+    drift_score = min(100, base_score + gap_penalty + adversarial_penalty)
+    return drift_score
+
+def transcribe_audio_simulation(audio_bytes):
+    """
+    Simulates 'Audio Sentry'. In a real app, this would call OpenAI Whisper.
+    Detects verbal compliance authorizations or risky directives.
+    """
+    # Simulated transcription for hackathon stability
+    if not audio_bytes: return None
+    
+    # Simulate finding a keyword in the audio
+    return (
+        "🔊 AUDIO TRANSCRIPT: 'Manager: Override the PCI check for Client X temporarily.'\n"
+        "⚠️ AUDIO SENTRY ALERT: Verbal directive contradicts Policy Clause 2."
+    )
+
+def generate_audit_report_text(state):
+    """Generates a text-based audit trail for the Download feature."""
+    report = f"""
+    GUARDIAN | STRATEGIC COMPLIANCE AUDIT REPORT
+    ============================================
+    Jurisdiction: {state.get('jurisdiction', 'Global')}
+    Risk Level: {state.get('risk_level')}
+    Compliance Drift: {state.get('compliance_drift')}%
+    
+    [FINDINGS LOG]
+    {chr(10).join(state.get('findings', []))}
+    
+    [POLICY GAPS IDENTIFIED]
+    {chr(10).join(state.get('policy_gaps', []))}
+    
+    [CONSENSUS AUDIT TRAIL]
+    {chr(10).join(state.get('consensus_audit', []))}
+    
+    [REMEDIATION PLAN]
+    {state.get('remediation_plan')}
+    
+    [GENERATED PATCH]
+    {state.get('generated_code')}
+    
+    Generated by GUARDIAN AI Swarm.
+    """
+    return report

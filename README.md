@@ -150,4 +150,9 @@ guardian/
 Unlike passive dashboards, Guardian is a **Self-Healing Organism**. It leverages a decentralized **Multi-Agent Swarm** to transition from passive monitoring to proactive, self-healing assurance. It autonomously discovers regulatory shifts, maps them to internal policies, detects multi-modal violations (Vision/Audio/Logs), and executes edge-level enforcement to neutralize financial liability in real-time.
 
 ---
+## 👥 Collaborators
+| Name | GitHub Username | Role |
+| :--- | :--- | :--- |
+| **Madhumitha S** | [@Madhumitxx13](https://github.com/Madhumitxx13) |  Developer |
+---
 

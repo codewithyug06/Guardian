@@ -10,7 +10,7 @@ Guardian is an autonomous, multi-agent AI governance and compliance orchestratio
 
 Traditional compliance frameworks are passive and reactive: violations are discovered during annual manual audits or after catastrophic regulatory fines have already been assessed. Guardian operates as an autonomous immune system, continuously discovering regulatory updates, performing multi-modal sensory monitoring (Vision, Audio, Telemetry, Source Code), simulating remediation in isolated digital twin environments, and enforcing cryptographic trust anchors without requiring manual intervention.
 
-![Guardian Command Center Alert State](docs/images/dashboard_alert.png)
+![Guardian Command Center Dashboard](docs/images/dashboard_preview.png)
 
 ---
 
@@ -110,25 +110,6 @@ graph TD
     CONSENSUS -.-> CRYPTO
     AUDIT_CTRL -.-> PDF
 ```
-
----
-
-## Live Dashboard Interface & Visual Proof
-
-### 1. Active Threat Intelligence & Remediation Preview
-When non-compliant patterns or adversarial red-team simulations are detected, the system triggers a **Critical Intervention Alert**, generates a **FIPS AES-256 patch**, and executes a **Digital Twin simulation**:
-
-![Guardian Alert State](docs/images/dashboard_alert.png)
-
-### 2. Multi-Regulatory Knowledge Graph Topology
-Demonstrates how non-compliance cascades across connected security controls via shared semantic bridge nodes (e.g., PCI-DSS 3.4 ↔ Encryption ↔ GDPR Article 32):
-
-![Regulatory Knowledge Graph Topology](docs/images/dashboard_mesh.png)
-
-### 3. Immutable Decision Vault & Edge Enforcement
-Displays the **Swarm Consensus Checklist**, the **Deterministic SHA-256 Merkle Root Anchor**, and the **SECURE Posture (0% Systemic Risk, $0.00 Liability)** after patch deployment:
-
-![Immutable Audit Vault and Secure State](docs/images/dashboard_vault_secure.png)
 
 ---
 
@@ -269,9 +250,8 @@ Guardian/
 │           └── page.tsx                         # Interactive Command Center Dashboard
 ├── docs/
 │   └── images/                                  # Architectural & UI visual assets
-│       ├── dashboard_alert.png                  # Critical Intervention & Threat Stream
-│       ├── dashboard_mesh.png                   # Neural Mesh Knowledge Graph Topology
-│       └── dashboard_vault_secure.png           # Immutable Audit Vault & Merkle Root
+│       ├── dashboard_preview.png
+│       └── dashboard_secure.png
 ├── docker-compose.yml                           # Multi-container orchestration
 └── README.md                                    # Project documentation
 ```
@@ -368,8 +348,8 @@ Authorization: Bearer <jwt_token>
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/codewithyug06/Guardian.git
-   cd Guardian
+   git clone https://github.com/your-username/guardian.git
+   cd guardian
    ```
 
 2. **Configure Environment**:

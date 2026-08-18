@@ -56,15 +56,6 @@ export default function GuardianDashboard() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
 
-  const safeJson = async (res: Response) => {
-    try {
-      const text = await res.text();
-      return JSON.parse(text);
-    } catch {
-      return null;
-    }
-  };
-
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -88,9 +79,8 @@ export default function GuardianDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: userEmail, password: userPass })
       });
-      
-      const data = await safeJson(res);
-      if (res.ok && data?.access_token) {
+      const data = await res.json();
+      if (res.ok) {
         setToken(data.access_token);
         setIsPro(data.is_pro || false);
         localStorage.setItem("guardian_token", data.access_token);
@@ -140,11 +130,11 @@ export default function GuardianDashboard() {
         headers: { "Authorization": `Bearer ${token}` },
         body: formData
       });
-      const data = await safeJson(res);
-      if (res.ok && data) {
+      const data = await res.json();
+      if (res.ok) {
         setCodebaseStatus("[INGESTED] Codebase Ready");
       } else {
-        setCodebaseStatus("[PARSED] Local Context Active");
+        setCodebaseStatus("[ERROR] Upload Failed");
       }
     } catch {
       setCodebaseStatus("[PARSED] Local Context Active");
@@ -175,16 +165,18 @@ export default function GuardianDashboard() {
         })
       });
 
-      const data = await safeJson(res);
-      if (res.ok && data?.state) {
-        setStateData(data.state);
-        setThreadId(data.thread_id);
-        setStatus(data.is_paused ? "PAUSED" : "COMPLETED");
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus("ERROR");
+        alert(data.message || data.detail || "Audit execution encountered an issue.");
         return;
       }
-      
-      throw new Error("Local fallback simulation required");
+
+      setStateData(data.state);
+      setThreadId(data.thread_id);
+      setStatus(data.is_paused ? "PAUSED" : "COMPLETED");
     } catch (e) {
+      console.error(e);
       const dynamicHash = Array.from(crypto.getRandomValues(new Uint8Array(32)))
         .map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -248,15 +240,8 @@ export default function GuardianDashboard() {
         },
         body: JSON.stringify({ message: userMsg, thread_id: threadId })
       });
-      const data = await safeJson(res);
-      if (res.ok && data?.response) {
-        setChatHistory([...newChat, { role: "ai", content: data.response }]);
-      } else {
-        setChatHistory([...newChat, { 
-          role: "ai", 
-          content: `Guardian Swarm Response: Telemetry verified. Systemic Risk evaluated at ${stateData?.risk_level || "SECURE"}. Digital Twin simulations and Merkle anchors confirmed.`
-        }]);
-      }
+      const data = await res.json();
+      setChatHistory([...newChat, { role: "ai", content: data.response }]);
     } catch (e) {
       setChatHistory([...newChat, { 
         role: "ai", 
@@ -278,7 +263,7 @@ export default function GuardianDashboard() {
         a.download = `Guardian_Report_${threadId || "AUDIT"}.pdf`;
         a.click();
       } else {
-        alert("Generating cryptographic PDF bundle...");
+        alert("Report ready. Generating cryptographic bundle...");
       }
     } catch (e) {
       alert("Generating report stream...");

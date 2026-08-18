@@ -1,12 +1,22 @@
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
-WORKDIR /app
-COPY backend-java/pom.xml .
-RUN mvn dependency:go-offline -B
-COPY backend-java/src ./src
-RUN mvn clean package -DskipTests
+FROM python:3.10-slim
 
-FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir langgraph-checkpoint-sqlite aiosqlite sqlite-vec fastapi uvicorn python-multipart
+
+# Copy the rest of the application
+COPY . .
+
+# Expose port
 EXPOSE 8000
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Run the FastAPI app
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

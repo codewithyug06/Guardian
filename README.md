@@ -10,8 +10,6 @@ Guardian is an autonomous, multi-agent AI governance and compliance orchestratio
 
 Traditional compliance frameworks are passive and reactive: violations are discovered during annual manual audits or after catastrophic regulatory fines have already been assessed. Guardian operates as an autonomous immune system, continuously discovering regulatory updates, performing multi-modal sensory monitoring (Vision, Audio, Telemetry, Source Code), simulating remediation in isolated digital twin environments, and enforcing cryptographic trust anchors without requiring manual intervention.
 
-![Guardian Command Center Dashboard](docs/images/dashboard_preview.png)
-
 ---
 
 ## Real-World Industry Context & Regulatory Landscape
@@ -248,10 +246,6 @@ Guardian/
 │           ├── layout.tsx                       # Root layout & typography
 │           ├── globals.css                      # Cyberpunk HUD styling & design tokens
 │           └── page.tsx                         # Interactive Command Center Dashboard
-├── docs/
-│   └── images/                                  # Architectural & UI visual assets
-│       ├── dashboard_preview.png
-│       └── dashboard_secure.png
 ├── docker-compose.yml                           # Multi-container orchestration
 └── README.md                                    # Project documentation
 ```

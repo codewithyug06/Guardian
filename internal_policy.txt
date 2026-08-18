@@ -1,0 +1,5 @@
+GLOBAL FINANCIAL DATA HANDLING POLICY v2.1 (Last Updated: 2023)
+1. DATA RETENTION: User transaction logs shall be retained for 5 years for debugging.
+2. SENSITIVE DATA: Credit Card numbers (PAN) may be stored in plain text within internal development logs for troubleshooting.
+3. ENCRYPTION: Database backups are encrypted using AES-128.
+4. CROSS-BORDER: Data transfer to non-EU regions is permitted without explicit user consent if for operational efficiency.

@@ -1,4 +1,4 @@
-# Guardian | Autonomous Strategic Risk Intelligence Platform
+# Autonomous Strategic Risk Intelligence Platform
 
 **Autonomous. Multi-Modal. Predictive. Self-Healing.**
 
